@@ -1,0 +1,40 @@
+{
+  "type": "FeatureCollection",
+  "name": "03_Vail-area",
+  "crs": {
+    "type": "name",
+    "properties": { "name": "urn:ogc:def:crs:EPSG::26913" }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "large salida test",
+        "descriptio": null,
+        "timestamp": null,
+        "begin": null,
+        "end": null,
+        "altitudeMo": null,
+        "tessellate": 1,
+        "extrude": 0,
+        "visibility": -1,
+        "drawOrder": null,
+        "icon": null
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [366007.331106645229738, 4418954.212899277918041, 0.0],
+              [429033.446955597144552, 4418531.950752426870167, 0.0],
+              [429666.711999862862285, 4359815.709094486199319, 0.0],
+              [365321.177561822347343, 4360330.643188001587987, 0.0],
+              [366007.331106645229738, 4418954.212899277918041, 0.0]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "type": "FeatureCollection",
+  "name": "02_CrestedButte-area",
+  "crs": {
+    "type": "name",
+    "properties": { "name": "urn:ogc:def:crs:EPSG::26913" }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "large salida test",
+        "descriptio": null,
+        "timestamp": null,
+        "begin": null,
+        "end": null,
+        "altitudeMo": null,
+        "tessellate": 1,
+        "extrude": 0,
+        "visibility": -1,
+        "drawOrder": null,
+        "icon": null
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [290677.328622942557558, 4351473.224162174388766, 0.0],
+              [353703.444471894472372, 4351050.962015323340893, 0.0],
+              [354336.709516160190105, 4292334.720357382670045, 0.0],
+              [289991.175078119675163, 4292849.654450898058712, 0.0],
+              [290677.328622942557558, 4351473.224162174388766, 0.0]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "type": "FeatureCollection",
+  "name": "01_Salida-area",
+  "crs": {
+    "type": "name",
+    "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "large salida test",
+        "description": null,
+        "timestamp": null,
+        "begin": null,
+        "end": null,
+        "altitudeMode": null,
+        "tessellate": 1,
+        "extrude": 0,
+        "visibility": -1,
+        "drawOrder": null,
+        "icon": null
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-106.512955190280394, 38.938149780547057, 0.0],
+            [-106.509733091850293, 38.409924628238421, 0.0],
+            [-105.772786403443007, 38.412461026660708, 0.0],
+            [-105.785803487965595, 38.941505819698222, 0.0],
+            [-106.512955190280394, 38.938149780547057, 0.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "large salida test",
+        "description": null,
+        "timestamp": null,
+        "begin": null,
+        "end": null,
+        "altitudeMode": null,
+        "tessellate": 1,
+        "extrude": 0,
+        "visibility": -1,
+        "drawOrder": null,
+        "icon": null
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-106.512955190280394, 38.938149780547057, 0.0],
+            [-106.509733091850293, 38.409924628238421, 0.0],
+            [-105.772786403443007, 38.412461026660708, 0.0],
+            [-105.785803487965595, 38.941505819698222, 0.0],
+            [-106.512955190280394, 38.938149780547057, 0.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "large salida test",
+        "description": null,
+        "timestamp": null,
+        "begin": null,
+        "end": null,
+        "altitudeMode": null,
+        "tessellate": 1,
+        "extrude": 0,
+        "visibility": -1,
+        "drawOrder": null,
+        "icon": null
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-106.512955190280394, 38.938149780547057, 0.0],
+            [-106.509733091850293, 38.409924628238421, 0.0],
+            [-105.772786403443007, 38.412461026660708, 0.0],
+            [-105.785803487965595, 38.941505819698222, 0.0],
+            [-106.512955190280394, 38.938149780547057, 0.0]
+          ]
+        ]
+      }
+    }
+  ]
+}
