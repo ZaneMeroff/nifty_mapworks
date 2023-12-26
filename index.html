@@ -335,13 +335,14 @@
               console.log("geoJSONFeatures: ", geoJSONFeatures);
 
               for (const feature of geoJSONFeatures) {
+                
                 // Add a data source containing GeoJSON data.
                 map.addSource(feature.geometry.properties.id, {
                   type: "geojson",
                   data: feature,
                 });
 
-                // Add a new layer to visualize the polygon.
+                // Add a new layer render the polygon to the map
                 map.addLayer({
                   id: uuid(),
                   type: "fill",
@@ -353,7 +354,7 @@
                   },
                 });
 
-                // Add a black outline around the polygon.
+                // Add a black outline around the polygon
                 map.addLayer({
                   id: uuid(),
                   type: "line",
@@ -363,6 +364,18 @@
                     "line-color": "#000",
                     "line-width": 3,
                   },
+                });
+
+                map.on("mousemove", feature.geometry.properties.id, (e) => {
+                  // Change the cursor style as a UI indicator.
+                  map.getCanvas().style.cursor = "pointer";
+
+                  // Populate the popup and set its coordinates based on the feature.
+                  const feature = e.features[0];
+                  popup
+                    .setLngLat(feature.geometry.coordinates)
+                    .setText(feature.geometry.name)
+                    .addTo(map);
                 });
               }
             });
