@@ -115,7 +115,7 @@
             .toString(16)
             .substring(1);
         }
-        return `${s4()} + ${s4()} + "-" + ${s4()} + "-" + ${s4()} + "-" + ${s4()} + "-" +  ${s4()} + ${s4()} + ${s4()}`;
+        return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}-${s4()}-${s4()}`;
       }
 
       async function streamToString(stream) {
@@ -145,6 +145,7 @@
                   properties: {
                     id: item.id,
                     locationName: item.locationName,
+                    link: item.link
                   },
                 },
               };
@@ -343,9 +344,11 @@
                   data: feature,
                 });
 
+                const fillLayerId = uuid();
+
                 // Add layer - filled area polygon
                 map.addLayer({
-                  id: uuid(),
+                  id: fillLayerId,
                   type: "fill",
                   source: feature.geometry.properties.id, // reference the data source
                   layout: {},
@@ -367,50 +370,55 @@
                   },
                 });
 
-                map.on("moveend", () => {
+                // map.on("moveend", () => {
 
-                  const features = map.queryRenderedFeatures({
-                    layers: [feature.geometry.properties.id],
-                  });
+                //   const features = map.queryRenderedFeatures({
+                //     layers: [fillLayerId],
+                //   });
 
-                  console.log('features: ', features)
+                //   console.log('features: ', features)
 
-                  if (features) {
-                    const uniqueFeatures = getUniqueFeatures(
-                      features,
-                      "iata_code"
-                    );
-                    // Populate features for the listing overlay.
-                    renderListings(uniqueFeatures);
+                //   if (features) {
+                //     const uniqueFeatures = getUniqueFeatures(
+                //       features,
+                //       "iata_code"
+                //     );
+                //     // Populate features for the listing overlay.
+                //     renderListings(uniqueFeatures);
 
-                    // Clear the input container
-                    filterEl.value = "";
+                //     // Clear the input container
+                //     filterEl.value = "";
 
-                    // Store the current features in sn `airports` variable to
-                    // later use for filtering on `keyup`.
-                    airports = uniqueFeatures;
-                  }
-                });
+                //     // Store the current features in sn `airports` variable to
+                //     // later use for filtering on `keyup`.
+                //     airports = uniqueFeatures;
+                //   }
+                // });
 
-                map.on("mousemove", feature.geometry.properties.id, (e) => {
-
-                  console.log('EVENT: ', e)
+                map.on("mousemove", fillLayerId, (e) => {
 
                   // Change the cursor style as a UI indicator
                   map.getCanvas().style.cursor = "pointer";
 
-                  // Populate the popup and set its coordinates based on the feature.
-                  const feature = e.features[0];
+                  // Target the feature that the cursor is over
+                  const mouseEventFeature = e.features[0];
+
+                  // Create a popup for the feature and add it to the map
                   popup
-                    .setLngLat(feature.geometry.coordinates)
-                    .setText(`BOOBZ`)
+                    .setLngLat(mouseEventFeature.geometry.coordinates[0][0])
+                    .setHTML(`
+                      <div>
+                        <p>${feature.geometry.properties.locationName}</p>
+                        <a href="${feature.geometry.properties.link}" target="_blank">VIEW MAP</a>
+                      </div>
+                    `)
                     .addTo(map);
                 });
 
-                map.on("mouseleave", feature.geometry.properties.id, () => {
-                  map.getCanvas().style.cursor = "";
-                  popup.remove();
-                });
+                // map.on("mouseleave", fillLayerId, () => {
+                //   map.getCanvas().style.cursor = "";
+                //   popup.remove();
+                // });
               }
 
 
