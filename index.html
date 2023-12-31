@@ -18,7 +18,7 @@
         padding: 0;
       }
       #map {
-        position: absolute;
+        position: relative;
         top: 0;
         bottom: 0;
         width: 100%;
@@ -141,7 +141,7 @@
                 type: "Feature",
                 geometry: {
                   type: "Polygon",
-                  coordinates: item.coordinates,
+                  coordinates: [item.coordinates],
                   properties: {
                     id: item.id,
                     locationName: item.locationName,
@@ -163,7 +163,7 @@
             // Holds visible airport features for filtering
             let airports = [];
 
-            // Create a popup, but don't add it to the map yet.
+            // Create a popup, but don't add it to the map yet
             const popup = new mapboxgl.Popup({
               closeButton: false,
             });
@@ -278,6 +278,8 @@
               });
 
               map.on("mousemove", "airport", (e) => {
+                console.log('airport event: ', e)
+
                 // Change the cursor style as a UI indicator.
                 map.getCanvas().style.cursor = "pointer";
 
@@ -335,14 +337,13 @@
               console.log("geoJSONFeatures: ", geoJSONFeatures);
 
               for (const feature of geoJSONFeatures) {
-                
-                // Add a data source containing GeoJSON data.
+                // Add a data source containing the GeoJSON data
                 map.addSource(feature.geometry.properties.id, {
                   type: "geojson",
                   data: feature,
                 });
 
-                // Add a new layer render the polygon to the map
+                // Add layer - filled area polygon
                 map.addLayer({
                   id: uuid(),
                   type: "fill",
@@ -354,7 +355,7 @@
                   },
                 });
 
-                // Add a black outline around the polygon
+                // Add layer - area polygon border
                 map.addLayer({
                   id: uuid(),
                   type: "line",
@@ -366,18 +367,54 @@
                   },
                 });
 
+                map.on("moveend", () => {
+
+                  const features = map.queryRenderedFeatures({
+                    layers: [feature.geometry.properties.id],
+                  });
+
+                  console.log('features: ', features)
+
+                  if (features) {
+                    const uniqueFeatures = getUniqueFeatures(
+                      features,
+                      "iata_code"
+                    );
+                    // Populate features for the listing overlay.
+                    renderListings(uniqueFeatures);
+
+                    // Clear the input container
+                    filterEl.value = "";
+
+                    // Store the current features in sn `airports` variable to
+                    // later use for filtering on `keyup`.
+                    airports = uniqueFeatures;
+                  }
+                });
+
                 map.on("mousemove", feature.geometry.properties.id, (e) => {
-                  // Change the cursor style as a UI indicator.
+
+                  console.log('EVENT: ', e)
+
+                  // Change the cursor style as a UI indicator
                   map.getCanvas().style.cursor = "pointer";
 
                   // Populate the popup and set its coordinates based on the feature.
                   const feature = e.features[0];
                   popup
                     .setLngLat(feature.geometry.coordinates)
-                    .setText(feature.geometry.name)
+                    .setText(`BOOBZ`)
                     .addTo(map);
                 });
+
+                map.on("mouseleave", feature.geometry.properties.id, () => {
+                  map.getCanvas().style.cursor = "";
+                  popup.remove();
+                });
               }
+
+
+              console.log('MAP: ', map)
             });
           });
         });
