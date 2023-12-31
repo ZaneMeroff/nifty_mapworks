@@ -161,10 +161,20 @@
               zoom: 6,
             });
 
+            // Used to store the selected area's id
+            let selectedAreaFeature = null;
+
+            // Set the selected area's id
+            function setSelectedAreaFeature(feature) {
+              // @ZACK - do we need to save the entire feature here?
+              selectedAreaFeature = feature;
+              console.log('selectedAreaFeature: ', selectedAreaFeature)
+            }
+
             // Holds visible airport features for filtering
             let airports = [];
 
-            // Create a popup, but don't add it to the map yet
+            // Create a popup instance, but don't add it to the map yet
             const popup = new mapboxgl.Popup({
               closeButton: false,
             });
@@ -396,33 +406,36 @@
                 // });
 
                 map.on("mousemove", fillLayerId, (e) => {
-
-                  // Change the cursor style as a UI indicator
+                  // Change the cursor to a pointer when hovering the feature
                   map.getCanvas().style.cursor = "pointer";
 
-                  // Target the feature that the cursor is over
+                  // Target the feature being hovered
                   const mouseEventFeature = e.features[0];
 
                   // Create a popup for the feature and add it to the map
                   popup
-                    .setLngLat(mouseEventFeature.geometry.coordinates[0][0])
+                    .setLngLat(mouseEventFeature.geometry.coordinates[0][0]) // BONUS: get this to find the center of the top line
                     .setHTML(`
                       <div>
                         <p>${feature.geometry.properties.locationName}</p>
-                        <a href="${feature.geometry.properties.link}" target="_blank">VIEW MAP</a>
+                        <a href="${feature.geometry.properties.link}" target="_blank">VIEW PRODUCT</a>
                       </div>
                     `)
                     .addTo(map);
                 });
 
-                // map.on("mouseleave", fillLayerId, () => {
-                //   map.getCanvas().style.cursor = "";
-                //   popup.remove();
-                // });
+                map.on("mouseleave", fillLayerId, () => {
+                  // Reset the cursor back to a grab hand when the mouse leaves the feature
+                  map.getCanvas().style.cursor = "";
+                  // popup.remove();
+                });
+
+                map.on("mousedown", fillLayerId, (e) => {
+                  console.log('CLICK!')
+                  setSelectedAreaFeature(feature)
+                  // if the mousedown happens on an area, don't close the popup
+                });
               }
-
-
-              console.log('MAP: ', map)
             });
           });
         });
