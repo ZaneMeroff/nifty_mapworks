@@ -265,11 +265,10 @@
                   map.getCanvas().style.cursor = "";
                 });
 
-                map.on("mousedown", fillLayerId, (e) => {
-                  console.log("CLICK!");
-                  setSelectedAreaFeature(feature);
-                  // Do we need to do anything with this? If not this selectedAreaFeature stuff can be removed.
-                });
+                // map.on("mousedown", fillLayerId, (e) => {
+                //   // Pan map to the location when clicked
+                //   panMapToLocation(turf.center(feature).geometry.coordinates);
+                // });
 
                 // Add a line item to the side panel for each map feature
                 const element = document.createElement("div");
@@ -279,15 +278,20 @@
                   cursor: pointer;
                   width: 100%;
                 `;
-                element.onclick = () =>
+                element.onclick = () => {
                   panMapToLocation(turf.center(feature).geometry.coordinates);
-                element.addEventListener("mouseover", () => {
-                  // Highlight corresponding feature on the map
                   popup
                     .setLngLat(computePolygonTopCenterPoint(feature))
                     .setHTML(popUpHTML)
                     .addTo(map);
-                });
+                }
+                // element.addEventListener("mousedown", () => {
+                //   // Show popup on the corresponding feature on the map
+                //   popup
+                //     .setLngLat(computePolygonTopCenterPoint(feature))
+                //     .setHTML(popUpHTML)
+                //     .addTo(map);
+                // });
 
                 listingEl.appendChild(element);
               }
