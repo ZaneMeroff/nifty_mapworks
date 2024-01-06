@@ -93,13 +93,6 @@
     <div id="map"></div>
 
     <div class="map-overlay">
-      <fieldset>
-        <input
-          id="feature-filter"
-          type="text"
-          placeholder="Search by location..."
-        />
-      </fieldset>
       <div id="feature-listing" class="listing"></div>
     </div>
 
@@ -139,14 +132,14 @@
             geoJSONFeatures = JSON.parse(stringData).map((item) => {
               return {
                 type: "Feature",
+                properties: {
+                  id: item.id,
+                  locationName: item.locationName,
+                  link: item.link
+                },
                 geometry: {
                   type: "Polygon",
-                  coordinates: [item.coordinates],
-                  properties: {
-                    id: item.id,
-                    locationName: item.locationName,
-                    link: item.link
-                  },
+                  coordinates: [item.coordinates]
                 },
               };
             });
@@ -161,6 +154,15 @@
               zoom: 6,
             });
 
+            function panToMapLocation(coord) {
+              map.flyTo({
+                center: coord,
+                zoom: 8, // You can adjust the zoom level as needed
+                speed: 1.5, // Speed of the animation
+                curve: 1, // Curvature of the flight path
+                essential: true // Indicates that this animation is essential for the user experience
+              });
+            }
             // Used to store the selected area's id
             let selectedAreaFeature = null;
 
@@ -183,197 +185,38 @@
             const filterEl = document.getElementById("feature-filter");
             const listingEl = document.getElementById("feature-listing");
 
-            function renderListings(features) {
-              const empty = document.createElement("p");
-              // Clear any existing listings
-              listingEl.innerHTML = "";
-              if (features.length) {
-                for (const feature of features) {
-                  const itemLink = document.createElement("a");
-                  const label = `${feature.properties.name} (${feature.properties.abbrev})`;
-                  itemLink.href = feature.properties.wikipedia;
-                  itemLink.target = "_blank";
-                  itemLink.textContent = label;
-                  itemLink.addEventListener("mouseover", () => {
-                    // Highlight corresponding feature on the map
-                    popup
-                      .setLngLat(feature.geometry.coordinates)
-                      .setText(label)
-                      .addTo(map);
-                  });
-                  listingEl.appendChild(itemLink);
-                }
-
-                // Show the filter input
-                filterEl.parentNode.style.display = "block";
-              } else if (features.length === 0 && filterEl.value !== "") {
-                empty.textContent = "No results found";
-                listingEl.appendChild(empty);
-              } else {
-                empty.textContent = "Drag the map to populate results";
-                listingEl.appendChild(empty);
-
-                // Hide the filter input
-                filterEl.parentNode.style.display = "none";
-
-                // remove features filter
-                map.setFilter("airport", ["has", "abbrev"]);
-              }
-            }
-
-            function normalize(string) {
-              return string.trim().toLowerCase();
-            }
-
-            // Because features come from tiled vector data,
-            // feature geometries may be split
-            // or duplicated across tile boundaries.
-            // As a result, features may appear
-            // multiple times in query results.
-            function getUniqueFeatures(features, comparatorProperty) {
-              const uniqueIds = new Set();
-              const uniqueFeatures = [];
-              for (const feature of features) {
-                const id = feature.properties[comparatorProperty];
-                if (!uniqueIds.has(id)) {
-                  uniqueIds.add(id);
-                  uniqueFeatures.push(feature);
-                }
-              }
-              return uniqueFeatures;
-            }
-
-            map.on("load", () => {
-              map.addSource("airports", {
-                type: "vector",
-                url: "mapbox://mapbox.04w69w5j",
-              });
-
-              map.addLayer({
-                id: "airport",
-                source: "airports",
-                "source-layer": "ne_10m_airports",
-                type: "circle",
-                paint: {
-                  "circle-color": "#4264fb",
-                  "circle-radius": 4,
-                  "circle-stroke-width": 2,
-                  "circle-stroke-color": "#ffffff",
-                },
-              });
-
-              map.on("movestart", () => {
-                // reset features filter as the map starts moving
-                map.setFilter("airport", ["has", "abbrev"]);
-              });
-
-              map.on("moveend", () => {
-                const features = map.queryRenderedFeatures({
-                  layers: ["airport"],
-                });
-
-                if (features) {
-                  const uniqueFeatures = getUniqueFeatures(
-                    features,
-                    "iata_code"
-                  );
-                  // Populate features for the listing overlay.
-                  renderListings(uniqueFeatures);
-
-                  // Clear the input container
-                  filterEl.value = "";
-
-                  // Store the current features in sn `airports` variable to
-                  // later use for filtering on `keyup`.
-                  airports = uniqueFeatures;
-                }
-              });
-
-              map.on("mousemove", "airport", (e) => {
-                console.log('airport event: ', e)
-
-                // Change the cursor style as a UI indicator.
-                map.getCanvas().style.cursor = "pointer";
-
-                // Populate the popup and set its coordinates based on the feature.
-                const feature = e.features[0];
-                popup
-                  .setLngLat(feature.geometry.coordinates)
-                  .setText(
-                    `${feature.properties.name} (${feature.properties.abbrev})`
-                  )
-                  .addTo(map);
-              });
-
-              map.on("mouseleave", "airport", () => {
-                map.getCanvas().style.cursor = "";
-                popup.remove();
-              });
-
-              filterEl.addEventListener("keyup", (e) => {
-                const value = normalize(e.target.value);
-
-                // Filter visible features that match the input value.
-                const filtered = [];
-                for (const feature of airports) {
-                  const name = normalize(feature.properties.name);
-                  const code = normalize(feature.properties.abbrev);
-                  if (name.includes(value) || code.includes(value)) {
-                    filtered.push(feature);
-                  }
-                }
-
-                // Populate the sidebar with filtered results
-                renderListings(filtered);
-
-                // Set the filter to populate features into the layer.
-                if (filtered.length) {
-                  map.setFilter("airport", [
-                    "match",
-                    ["get", "abbrev"],
-                    filtered.map((feature) => {
-                      return feature.properties.abbrev;
-                    }),
-                    true,
-                    false,
-                  ]);
-                }
-              });
-
-              // Call this function on initialization
-              // passing an empty array to render an empty state
-              renderListings([]);
-            });
-
             map.on("load", () => {
               console.log("geoJSONFeatures: ", geoJSONFeatures);
 
               for (const feature of geoJSONFeatures) {
                 // Add a data source containing the GeoJSON data
-                map.addSource(feature.geometry.properties.id, {
+                map.addSource(feature.properties.id, {
                   type: "geojson",
                   data: feature,
                 });
 
                 const fillLayerId = uuid();
 
-                // Add layer - filled area polygon
+                // Add map layer - filled area polygon
                 map.addLayer({
                   id: fillLayerId,
                   type: "fill",
-                  source: feature.geometry.properties.id, // reference the data source
+                  source: feature.properties.id, // reference the data source
                   layout: {},
+                  properties: {
+                    locationName: feature.properties.locationName
+                  },
                   paint: {
                     "fill-color": "#0080ff", // blue color fill
                     "fill-opacity": 0.5,
                   },
                 });
 
-                // Add layer - area polygon border
+                // Add map layer - area polygon border
                 map.addLayer({
                   id: uuid(),
                   type: "line",
-                  source: feature.geometry.properties.id,
+                  source: feature.properties.id,
                   layout: {},
                   paint: {
                     "line-color": "#000",
@@ -381,30 +224,12 @@
                   },
                 });
 
-                // map.on("moveend", () => {
-
-                //   const features = map.queryRenderedFeatures({
-                //     layers: [fillLayerId],
-                //   });
-
-                //   console.log('features: ', features)
-
-                //   if (features) {
-                //     const uniqueFeatures = getUniqueFeatures(
-                //       features,
-                //       "iata_code"
-                //     );
-                //     // Populate features for the listing overlay.
-                //     renderListings(uniqueFeatures);
-
-                //     // Clear the input container
-                //     filterEl.value = "";
-
-                //     // Store the current features in sn `airports` variable to
-                //     // later use for filtering on `keyup`.
-                //     airports = uniqueFeatures;
-                //   }
-                // });
+                const popUpHTML = `
+                  <div>
+                    <p>${feature.properties.locationName}</p>
+                    <a href="${feature.properties.link}" target="_blank">VIEW PRODUCT</a>
+                  </div>
+                `
 
                 map.on("mousemove", fillLayerId, (e) => {
                   // Change the cursor to a pointer when hovering the feature
@@ -416,28 +241,40 @@
                   // Create a popup for the feature and add it to the map
                   popup
                     .setLngLat(mouseEventFeature.geometry.coordinates[0][0]) // BONUS: get this to find the center of the top line
-                    .setHTML(`
-                      <div>
-                        <p>${feature.geometry.properties.locationName}</p>
-                        <a href="${feature.geometry.properties.link}" target="_blank">VIEW PRODUCT</a>
-                      </div>
-                    `)
+                    .setHTML(popUpHTML)  
                     .addTo(map);
                 });
 
                 map.on("mouseleave", fillLayerId, () => {
                   // Reset the cursor back to a grab hand when the mouse leaves the feature
                   map.getCanvas().style.cursor = "";
-                  // popup.remove();
                 });
 
                 map.on("mousedown", fillLayerId, (e) => {
                   console.log('CLICK!')
                   setSelectedAreaFeature(feature)
-                  // if the mousedown happens on an area, don't close the popup
+                  // Do we need to do anything with this? If not this selectedAreaFeature stuff can be removed.
                 });
+
+                const element = document.createElement("div");
+                element.innerHTML = feature.properties.locationName;
+                element.style = `
+                  border-bottom: 1px solid black; 
+                  cursor: pointer;
+                  width: 100%;
+                `
+                element.onclick = () => panToMapLocation(feature.geometry.coordinates[0][0]) 
+                element.addEventListener("mouseover", () => {
+                  // Highlight corresponding feature on the map
+                  popup
+                    .setLngLat(feature.geometry.coordinates[0][0])
+                    .setHTML(popUpHTML)  
+                    .addTo(map);
+                });
+
+                listingEl.appendChild(element);
               }
-            });
+            }); 
           });
         });
       }
