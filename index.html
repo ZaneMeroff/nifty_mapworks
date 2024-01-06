@@ -100,6 +100,8 @@
       // Data
       mapboxgl.accessToken =
         "pk.eyJ1IjoiYmlrZXJpZGEiLCJhIjoiY2l5bDJxcG83MDAyNDJxbnJmcWk0NzFxMSJ9.EWdwgIGRuN4ALQPvICFCog";
+      
+      // Array of Feature<Polygon> map areas
       let geoJSONFeatures = null;
 
       function uuid() {
@@ -129,66 +131,78 @@
           "https://zanemeroff.github.io/geojson_test_file/area_loacations.json"
         ).then((data) => {
           streamToString(data.body).then((stringData) => {
+            // Convert our custom map data from our API into valid GeoJSON Feature<Polygon>[]
             geoJSONFeatures = JSON.parse(stringData).map((item) => {
               return {
                 type: "Feature",
                 properties: {
                   id: item.id,
                   locationName: item.locationName,
-                  link: item.link
+                  link: item.link,
                 },
                 geometry: {
                   type: "Polygon",
-                  coordinates: [item.coordinates]
+                  coordinates: [item.coordinates],
                 },
               };
             });
 
+            // Create MapBox instance
             const map = new mapboxgl.Map({
               container: "map",
-              // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+              // Choose from MapBox's core styles, or make your own style with MapBox Studio
               style: "mapbox://styles/mapbox/streets-v12",
-              center: [-105.5, 39],
+              center: [-105.5, 39], // Starting center coord for map
               maxZoom: 20,
               minZoom: 1,
               zoom: 6,
             });
 
-            function panToMapLocation(coord) {
-              map.flyTo({
-                center: coord,
-                zoom: 8, // You can adjust the zoom level as needed
-                speed: 1.5, // Speed of the animation
-                curve: 1, // Curvature of the flight path
-                essential: true // Indicates that this animation is essential for the user experience
-              });
-            }
-            // Used to store the selected area's id
-            let selectedAreaFeature = null;
-
-            // Set the selected area's id
-            function setSelectedAreaFeature(feature) {
-              // @ZACK - do we need to save the entire feature here?
-              selectedAreaFeature = feature;
-              console.log('selectedAreaFeature: ', selectedAreaFeature)
-            }
-
-            // Holds visible airport features for filtering
-            let airports = [];
-
             // Create a popup instance, but don't add it to the map yet
             const popup = new mapboxgl.Popup({
               closeButton: false,
-              closeOnClick: false
+              closeOnClick: false,
             });
+
+            /**
+             * @name panMapToLocation
+             * @description Takes a coordinate and pans map to that location
+             * @param {Array} coord: [number, number]
+             * @returns void
+             */
+            function panMapToLocation(coord) {
+              map.flyTo({
+                center: coord,
+                zoom: 8,
+                speed: 1.5,
+                curve: 1,
+                essential: true, // idk what this does, but I think we need it?
+              });
+            }
+
+            /**
+             * @name computePolygonTopCenterPoint
+             * @description Takes a polygon feature and returns the center point of the top segment (assumes the polygon is wound CCW)
+             * @param {Object} polygonFeature: Feature<Polygon>
+             * @returns coord as [number, number]
+             */
+            function computePolygonTopCenterPoint(polygonFeature) {
+              const polygonTopSegment = turf.lineString([
+                polygonFeature.geometry.coordinates[0][0],
+                polygonFeature.geometry.coordinates[0][3],
+              ]);
+              return turf.center(polygonTopSegment).geometry.coordinates;
+            }
 
             const filterEl = document.getElementById("feature-filter");
             const listingEl = document.getElementById("feature-listing");
 
             map.on("load", () => {
+
               console.log("geoJSONFeatures: ", geoJSONFeatures);
 
               for (const feature of geoJSONFeatures) {
+                
                 // Add a data source containing the GeoJSON data
                 map.addSource(feature.properties.id, {
                   type: "geojson",
@@ -204,7 +218,7 @@
                   source: feature.properties.id, // reference the data source
                   layout: {},
                   properties: {
-                    locationName: feature.properties.locationName
+                    locationName: feature.properties.locationName,
                   },
                   paint: {
                     "fill-color": "#0080ff", // blue color fill
@@ -224,15 +238,16 @@
                   },
                 });
 
+                // Create the HTML to use for map popups
                 const popUpHTML = `
                   <div>
                     <p>${feature.properties.locationName}</p>
                     <a href="${feature.properties.link}" target="_blank">VIEW PRODUCT</a>
                   </div>
-                `
+                `;
 
                 map.on("mousemove", fillLayerId, (e) => {
-                  // Change the cursor to a pointer when hovering the feature
+                  // Change the cursor to a pointer when hovering a map feature
                   map.getCanvas().style.cursor = "pointer";
 
                   // Target the feature being hovered
@@ -240,8 +255,8 @@
 
                   // Create a popup for the feature and add it to the map
                   popup
-                    .setLngLat(mouseEventFeature.geometry.coordinates[0][0]) // BONUS: get this to find the center of the top line
-                    .setHTML(popUpHTML)  
+                    .setLngLat(computePolygonTopCenterPoint(feature))
+                    .setHTML(popUpHTML)
                     .addTo(map);
                 });
 
@@ -251,35 +266,38 @@
                 });
 
                 map.on("mousedown", fillLayerId, (e) => {
-                  console.log('CLICK!')
-                  setSelectedAreaFeature(feature)
+                  console.log("CLICK!");
+                  setSelectedAreaFeature(feature);
                   // Do we need to do anything with this? If not this selectedAreaFeature stuff can be removed.
                 });
 
+                // Add a line item to the side panel for each map feature
                 const element = document.createElement("div");
                 element.innerHTML = feature.properties.locationName;
                 element.style = `
                   border-bottom: 1px solid black; 
                   cursor: pointer;
                   width: 100%;
-                `
-                element.onclick = () => panToMapLocation(feature.geometry.coordinates[0][0]) 
+                `;
+                element.onclick = () =>
+                  panMapToLocation(turf.center(feature).geometry.coordinates);
                 element.addEventListener("mouseover", () => {
                   // Highlight corresponding feature on the map
                   popup
-                    .setLngLat(feature.geometry.coordinates[0][0])
-                    .setHTML(popUpHTML)  
+                    .setLngLat(computePolygonTopCenterPoint(feature))
+                    .setHTML(popUpHTML)
                     .addTo(map);
                 });
 
                 listingEl.appendChild(element);
               }
-            }); 
+            });
           });
         });
       }
 
       startApp();
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
   </body>
 </html>
