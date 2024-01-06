@@ -177,6 +177,7 @@
             // Create a popup instance, but don't add it to the map yet
             const popup = new mapboxgl.Popup({
               closeButton: false,
+              closeOnClick: false
             });
 
             const filterEl = document.getElementById("feature-filter");
@@ -410,7 +411,7 @@
                   map.getCanvas().style.cursor = "pointer";
 
                   // Target the feature being hovered
-                  const mouseEventFeature = e.features[0];
+                  const mouseEventFeature = e.features[0]; // This isn't really needed?
 
                   // Create a popup for the feature and add it to the map
                   popup

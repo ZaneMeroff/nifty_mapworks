@@ -1,0 +1,29 @@
+{
+  "name": "nifty_mapworks_mapbox",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZaneMeroff/nifty_mapworks.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZaneMeroff/nifty_mapworks/issues"
+  },
+  "homepage": "https://github.com/ZaneMeroff/nifty_mapworks#readme",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@types/mapbox-gl": "^2.7.19",
+    "mapbox-gl": "^3.0.1"
+  }
+}
