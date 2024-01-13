@@ -88,19 +88,58 @@
       .map-overlay .listing a:hover {
         background: #f0f0f0;
       }
+
+      .mapboxgl-popup-content { 
+        border-radius: 10px;
+        background-color: transparent;
+        padding: 0px;
+        box-shadow: 2px 3px 5px #000;
+      }
+
+      .mapboxgl-popup-tip {
+        /* display: none; */
+      }
+
+      .fade-in-animation {
+        animation: fadeInAnimation ease 1s;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+      }
+
+      @keyframes fadeInAnimation {
+        0% {
+          opacity: 0.3;
+        }
+        100% {
+          opacity: 0.8;
+        }
+      }
+
+      .side-panel-header {
+        background-color: blue;
+        color: white;
+        font-size: 18px;
+        text-align: center;
+        text-transform: uppercase;
+        padding: 10px 0px;
+      }
     </style>
 
     <div id="map"></div>
 
     <div class="map-overlay">
-      <div id="feature-listing" class="listing"></div>
+      <!-- <div class="fade-in-animation" style="height: 100px; width: 100px; background-color: #404;"></div> -->
+      <div style="width: 100%">
+        <div class="side-panel-header">Map Locations</div>
+        <div id="feature-listing" class="listing"></div>
+      </div>
     </div>
 
     <script>
       // Data
       mapboxgl.accessToken =
         "pk.eyJ1IjoiYmlrZXJpZGEiLCJhIjoiY2l5bDJxcG83MDAyNDJxbnJmcWk0NzFxMSJ9.EWdwgIGRuN4ALQPvICFCog";
-      
+
       // Array of Feature<Polygon> map areas
       let geoJSONFeatures = null;
 
@@ -137,8 +176,9 @@
                 type: "Feature",
                 properties: {
                   id: item.id,
-                  locationName: item.locationName,
+                  labelName: item.labelName,
                   link: item.link,
+                  state: item.state
                 },
                 geometry: {
                   type: "Polygon",
@@ -151,7 +191,10 @@
             const map = new mapboxgl.Map({
               container: "map",
               // Choose from MapBox's core styles, or make your own style with MapBox Studio
-              style: "mapbox://styles/mapbox/streets-v12",
+
+              // style: "mapbox://styles/mapbox/satellite-streets-v12",
+              style: "mapbox://styles/mapbox/outdoors-v12",
+
               center: [-105.5, 39], // Starting center coord for map
               maxZoom: 20,
               minZoom: 1,
@@ -171,6 +214,7 @@
              * @returns void
              */
             function panMapToLocation(coord) {
+              console.log("coord: ", coord);
               map.flyTo({
                 center: coord,
                 zoom: 8,
@@ -198,11 +242,9 @@
             const listingEl = document.getElementById("feature-listing");
 
             map.on("load", () => {
-
               console.log("geoJSONFeatures: ", geoJSONFeatures);
 
               for (const feature of geoJSONFeatures) {
-                
                 // Add a data source containing the GeoJSON data
                 map.addSource(feature.properties.id, {
                   type: "geojson",
@@ -218,11 +260,11 @@
                   source: feature.properties.id, // reference the data source
                   layout: {},
                   properties: {
-                    locationName: feature.properties.locationName,
+                    labelName: feature.properties.labelName,
                   },
                   paint: {
                     "fill-color": "#0080ff", // blue color fill
-                    "fill-opacity": 0.5,
+                    "fill-opacity": 0.3,
                   },
                 });
 
@@ -241,10 +283,29 @@
                 // Create the HTML to use for map popups
                 const popUpHTML = `
                   <div>
-                    <p>${feature.properties.locationName}</p>
-                    <a href="${feature.properties.link}" target="_blank">VIEW PRODUCT</a>
+                    <div style="
+                        background-color: blue; 
+                        border-top-left-radius: 10px;
+                        border-top-right-radius: 10px;
+                        text-align: center; 
+                        padding: 7px;
+                      "
+                    >
+                      <p style="color: white; font-size: 18px; margin: 0px;">${feature.properties.labelName}</p>
+                    </div>
+                    <div style="
+                        background-color: white; 
+                        border-bottom-left-radius: 10px;
+                        border-bottom-right-radius: 10px;
+                        padding-top: 5px; 
+                        text-align: center; 
+                        padding: 7px;
+                      "
+                    >
+                      <a style="color: blue; font-size: 16px; margin: 0px; text-decoration: none;" href="${feature.properties.link}" target="_blank">VIEW PRODUCT</a>
+                    </div>
                   </div>
-                `;
+                `; // See if you can add css animation to this HTML
 
                 map.on("mousemove", fillLayerId, (e) => {
                   // Change the cursor to a pointer when hovering a map feature
@@ -258,6 +319,9 @@
                     .setLngLat(computePolygonTopCenterPoint(feature))
                     .setHTML(popUpHTML)
                     .addTo(map);
+
+                  // Make popup fade in when activated - isn't working right
+                  // popup.getElement().classList.add('fade-in-animation')
                 });
 
                 map.on("mouseleave", fillLayerId, () => {
@@ -265,17 +329,18 @@
                   map.getCanvas().style.cursor = "";
                 });
 
-                // map.on("mousedown", fillLayerId, (e) => {
-                //   // Pan map to the location when clicked
-                //   panMapToLocation(turf.center(feature).geometry.coordinates);
-                // });
+                // Listen for a click event on the specific layer and pan map
+                map.on("click", fillLayerId, () => {
+                  panMapToLocation(turf.center(feature).geometry.coordinates);
+                });
 
                 // Add a line item to the side panel for each map feature
                 const element = document.createElement("div");
-                element.innerHTML = feature.properties.locationName;
+                element.innerHTML = feature.properties.labelName;
                 element.style = `
                   border-bottom: 1px solid black; 
                   cursor: pointer;
+                  font-size: 14px;
                   width: 100%;
                 `;
                 element.onclick = () => {
@@ -284,17 +349,10 @@
                     .setLngLat(computePolygonTopCenterPoint(feature))
                     .setHTML(popUpHTML)
                     .addTo(map);
-                }
-                // element.addEventListener("mousedown", () => {
-                //   // Show popup on the corresponding feature on the map
-                //   popup
-                //     .setLngLat(computePolygonTopCenterPoint(feature))
-                //     .setHTML(popUpHTML)
-                //     .addTo(map);
-                // });
-
+                };
                 listingEl.appendChild(element);
-              }
+
+              } // END OF FOR LOOP
             });
           });
         });
