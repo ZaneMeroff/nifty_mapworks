@@ -34,6 +34,7 @@
         bottom: 0;
         width: 75%;
       }
+      
       .map-overlay {
         position: absolute;
         width: 25%;
@@ -89,7 +90,7 @@
         background: #f0f0f0;
       }
 
-      .mapboxgl-popup-content { 
+      .mapboxgl-popup-content {
         border-radius: 10px;
         background-color: transparent;
         padding: 0px;
@@ -122,6 +123,10 @@
         text-align: center;
         text-transform: uppercase;
         padding: 10px 0px;
+      }
+
+      .hover-effect {
+        background-color: #bbbaba;
       }
     </style>
 
@@ -178,7 +183,7 @@
                   id: item.id,
                   labelName: item.labelName,
                   link: item.link,
-                  state: item.state
+                  state: item.state,
                 },
                 geometry: {
                   type: "Polygon",
@@ -214,7 +219,6 @@
              * @returns void
              */
             function panMapToLocation(coord) {
-              console.log("coord: ", coord);
               map.flyTo({
                 center: coord,
                 zoom: 8,
@@ -319,9 +323,6 @@
                     .setLngLat(computePolygonTopCenterPoint(feature))
                     .setHTML(popUpHTML)
                     .addTo(map);
-
-                  // Make popup fade in when activated - isn't working right
-                  // popup.getElement().classList.add('fade-in-animation')
                 });
 
                 map.on("mouseleave", fillLayerId, () => {
@@ -340,8 +341,9 @@
                 element.style = `
                   border-bottom: 1px solid black; 
                   cursor: pointer;
+                  display: flex;
+                  justify-content: space-between;
                   font-size: 14px;
-                  width: 100%;
                 `;
                 element.onclick = () => {
                   panMapToLocation(turf.center(feature).geometry.coordinates);
@@ -350,8 +352,21 @@
                     .setHTML(popUpHTML)
                     .addTo(map);
                 };
-                listingEl.appendChild(element);
 
+                const anchor = document.createElement("a");
+                anchor.innerHTML = "VIEW PRODUCT";
+                anchor.style = `
+                  border: 1px solid blue;
+                  color: blue; 
+                  font-size: 16px; 
+                  margin-left: 20px; 
+                  text-decoration: none;
+                `;
+                anchor.setAttribute("href", feature.properties.link);
+                anchor.setAttribute("target", "_blank");
+
+                element.appendChild(anchor);
+                listingEl.appendChild(element);
               } // END OF FOR LOOP
             });
           });
